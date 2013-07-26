@@ -5,7 +5,7 @@
     using System.Security;
 
     /// <summary>
-    /// Provides static methods for writing debug strings.
+    /// Provides static methods for writing values to the debug output.
     /// </summary>
     public static class DebugString
     {
@@ -45,6 +45,28 @@
         }
 
         /// <summary>
+        /// Writes the text representation of the specified object to the debug output.
+        /// </summary>
+        /// <param name="value">
+        /// The value to write.
+        /// </param>
+        /// <exception cref="PlatformNotSupportedException">
+        /// This operation is not supported on the current platform.
+        /// </exception>
+        [SecurityCritical]
+        public static void Write<TValue>(TValue value)
+        {
+            if (value == null)
+            {
+                Write(null);
+            }
+            else
+            {
+                Write(value.ToString());
+            }
+        }
+
+        /// <summary>
         /// Writes the text representation of the specified object to the debug output using the specified
         /// format information.
         /// </summary>
@@ -54,6 +76,15 @@
         /// <param name="arg0">
         /// The object to write using <paramref name="format"/>.
         /// </param>
+        /// <exception cref="PlatformNotSupportedException">
+        /// This operation is not supported on the current platform.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="format"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="FormatException">
+        /// <paramref name="format"/> is invalid.-or- The index of a format item is not zero.
+        /// </exception>
         [SecurityCritical]
         public static void Write(string format, object arg0)
         {
@@ -74,6 +105,15 @@
         /// <param name="arg1">
         /// The second object to write using <paramref name="format"/>.
         /// </param>
+        /// <exception cref="PlatformNotSupportedException">
+        /// This operation is not supported on the current platform.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="format"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="FormatException">
+        /// <paramref name="format"/> is invalid.-or- The index of a format item is not zero or one.
+        /// </exception>
         [SecurityCritical]
         public static void Write(string format, object arg0, object arg1)
         {
@@ -97,6 +137,16 @@
         /// <param name="arg2">
         /// The third object to write using <paramref name="format"/>.
         /// </param>
+        /// <exception cref="PlatformNotSupportedException">
+        /// This operation is not supported on the current platform.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="format"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="FormatException">
+        /// <paramref name="format"/> is invalid.-or- The index of a format item is less than zero,
+        /// or greater than two.
+        /// </exception>
         [SecurityCritical]
         public static void Write(string format, object arg0, object arg1, object arg2)
         {
@@ -111,13 +161,23 @@
         /// <param name="format">
         /// The composite format string.
         /// </param>
-        /// <param name="args">
+        /// <param name="arg">
         /// The array of objects to write using <paramref name="format"/>.
         /// </param>
+        /// <exception cref="PlatformNotSupportedException">
+        /// This operation is not supported on the current platform.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// <paramref name="format"/> or <paramref name="arg"/> is <c>null</c>.
+        /// </exception>
+        /// <exception cref="FormatException">
+        /// <paramref name="format"/> is invalid.-or- The index of a format item is less than zero,
+        /// or greater than or equal to the length of the <paramref name="arg" /> array.
+        /// </exception>
         [SecurityCritical]
-        public static void Write(string format, params object[] args)
+        public static void Write(string format, params object[] arg)
         {
-            string value = string.Format(format, args);
+            string value = string.Format(format, arg);
             Write(value);
         }
 
