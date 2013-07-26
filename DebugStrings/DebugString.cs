@@ -2,7 +2,7 @@
 {
     using System;
     using System.Runtime.InteropServices;
-using System.Security;
+    using System.Security;
 
     /// <summary>
     /// Provides static methods for writing debug strings.
@@ -25,23 +25,100 @@ using System.Security;
         private extern static void OutputDebugString(string lpOutputString);
 
         /// <summary>
-        /// Writes the specified text to the debug output.
+        /// Writes the specified string value to the debug output.
         /// </summary>
-        /// <param name="text">
-        /// The text to write to the debug output.
+        /// <param name="value">
+        /// The value to write.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
         /// </exception>
         [SecurityCritical]
-        public static void Write(string text)
+        public static void Write(string value)
         {
             if (!IsPlatformSupported)
             {
                 throw new PlatformNotSupportedException();
             }
 
-            OutputDebugString(text);
+            OutputDebugString(value);
+        }
+
+        /// <summary>
+        /// Writes the text representation of the specified object to the debug output using the specified
+        /// format information.
+        /// </summary>
+        /// <param name="format">
+        /// The composite format string.
+        /// </param>
+        /// <param name="arg0">
+        /// The object to write using <paramref name="format"/>.
+        /// </param>
+        [SecurityCritical]
+        public static void Write(string format, object arg0)
+        {
+            string value = string.Format(format, arg0);
+            Write(value);
+        }
+
+        /// <summary>
+        /// Writes the text representation of the specified objects to the debug output using the specified
+        /// format information.
+        /// </summary>
+        /// <param name="format">
+        /// The composite format string.
+        /// </param>
+        /// <param name="arg0">
+        /// The first object to write using <paramref name="format"/>.
+        /// </param>
+        /// <param name="arg1">
+        /// The second object to write using <paramref name="format"/>.
+        /// </param>
+        [SecurityCritical]
+        public static void Write(string format, object arg0, object arg1)
+        {
+            string value = string.Format(format, arg0, arg1);
+            Write(value);
+        }
+
+        /// <summary>
+        /// Writes the text representation of the specified objects to the debug output using the specified
+        /// format information.
+        /// </summary>
+        /// <param name="format">
+        /// The composite format string.
+        /// </param>
+        /// <param name="arg0">
+        /// The first object to write using <paramref name="format"/>.
+        /// </param>
+        /// <param name="arg1">
+        /// The second object to write using <paramref name="format"/>.
+        /// </param>
+        /// <param name="arg2">
+        /// The third object to write using <paramref name="format"/>.
+        /// </param>
+        [SecurityCritical]
+        public static void Write(string format, object arg0, object arg1, object arg2)
+        {
+            string value = string.Format(format, arg0, arg1, arg2);
+            Write(value);
+        }
+
+        /// <summary>
+        /// Writes the text representation of the specified array of objects to the debug output using
+        /// the specified format information.
+        /// </summary>
+        /// <param name="format">
+        /// The composite format string.
+        /// </param>
+        /// <param name="args">
+        /// The array of objects to write using <paramref name="format"/>.
+        /// </param>
+        [SecurityCritical]
+        public static void Write(string format, params object[] args)
+        {
+            string value = string.Format(format, args);
+            Write(value);
         }
 
         /// <summary>
