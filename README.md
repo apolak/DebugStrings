@@ -1,4 +1,4 @@
 DebugStrings
 ============
 
-C# API for sending and receiving debug strings
+.NET class library for sending and receiving debug strings.
