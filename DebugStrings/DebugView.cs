@@ -16,87 +16,40 @@
     public sealed class DebugView : IDisposable
     {
         /// <summary>
-        /// The length of the data buffer.
+        /// The <see cref="DebugViewContext"/> that provides intrinsic kernel objects
+        /// for inter-process communication.
         /// </summary>
-        private const int DataBufferLength = 4096;
-
-        /// <summary>
-        /// The <see cref="DebugView"/> that has not been associated with the debug output objects.
-        /// </summary>
-        private static readonly DebugView Detached = new DebugView();
-
-        /// <summary>
-        /// Indicates whether this <see cref="DebugView"/> has been successfully associated
-        /// with the debug output objects.
-        /// </summary>
-        private readonly bool attached;
-
-        /// <summary>
-        /// The memory-mapped file to which the data is written to.
-        /// </summary>
-        private MemoryMappedFile dataBufferFile;
-
-        /// <summary>
-        /// The event that this <see cref="DebugView"/> sets to signaled when the memory-mapped file
-        /// is ready to receive data.
-        /// </summary>
-        private EventWaitHandle bufferReadyEvent;
-
-        /// <summary>
-        /// The event that becomes signaled when data has been written to the memory-mapped file.
-        /// </summary>
-        private WaitHandle dataReadyEvent;
-
+        private DebugViewContext context;
+        
         /// <summary>
         /// The memory buffer to which the data is read from the memory-mapped file.
         /// </summary>
-        private byte[] dataBuffer;
+        private byte[] buffer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DebugView"/> class.
         /// </summary>
-        private DebugView()
+        /// <param name="context">
+        /// The <see cref="DebugViewContext"/> that provides intrinsic kernel objects
+        /// for inter-process communication.
+        /// </param>
+        private DebugView(DebugViewContext context)
         {
+            this.context = context;
+            
+            if (context != null)
+            {
+                this.buffer = new byte[DebugViewContext.BufferLength];
+            }
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DebugView"/> class.
-        /// </summary>
-        /// <param name="dataBufferFile">
-        /// The memory-mapped file to which the data is written to.
-        /// </param>
-        /// <param name="bufferReadyEvent">
-        /// The event that this <see cref="DebugView"/> sets to signaled when the memory-mapped file
-        /// is ready to receive data.
-        /// </param>
-        /// <param name="dataReadyEvent">
-        /// The event that becomes signaled when data has been written to the memory-mapped file.
-        /// </param>
-        private DebugView(
-            MemoryMappedFile dataBufferFile,
-            EventWaitHandle bufferReadyEvent,
-            WaitHandle dataReadyEvent)
-        {
-            Debug.Assert(dataBufferFile != null, "dataBufferFile is null");
-            Debug.Assert(bufferReadyEvent != null, "bufferReadyEvent is null");
-            Debug.Assert(dataReadyEvent != null, "dataReadyEvent is null");
-
-            this.attached = true;
-            this.dataBufferFile = dataBufferFile;
-            this.bufferReadyEvent = bufferReadyEvent;
-            this.dataReadyEvent = dataReadyEvent;
-            this.dataBuffer = new byte[DataBufferLength];
-
-            this.bufferReadyEvent.Set();
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether this <see cref="DebugView"/> has been successfully
-        /// associated with the debug output objects.
+        /// Gets a value indicating whether the buffer to which debug output values
+        /// are written to has been successfully created.
         /// </summary>
         public bool IsAttached
         {
-            get { return this.attached; }
+            get { return this.context != null; }
         }
 
         /// <summary>
@@ -107,77 +60,14 @@
         /// </returns>
         public static DebugView CreateView()
         {
-            const string MemoryMappedFileName = @"DBWIN_BUFFER";
-            const string BufferReadyEventName = @"DBWIN_BUFFER_READY";
-            const string DataReadyEventName = @"DBWIN_DATA_READY";
+            DebugViewContext context;
 
-            MemoryMappedFile dataBufferFile = null;
-            EventWaitHandle bufferReadyEvent = null;
-            WaitHandle dataReadyEvent = null;
-            bool createdNew = false;
+            DebugViewContext.TryAcquireContext(out context);
+            var view = new DebugView(context);
 
-            try
-            {
-                dataBufferFile = MemoryMappedFile.CreateNew(
-                    MemoryMappedFileName,
-                    DataBufferLength,
-                    MemoryMappedFileAccess.ReadWrite);
-
-                bufferReadyEvent = new EventWaitHandle(
-                    false,
-                    EventResetMode.AutoReset,
-                    BufferReadyEventName,
-                    out createdNew);
-
-                if (!createdNew)
-                {
-                    return Detached;
-                }
-
-                dataReadyEvent = new EventWaitHandle(
-                    false,
-                    EventResetMode.AutoReset,
-                    DataReadyEventName,
-                    out createdNew);
-
-                if (!createdNew)
-                {
-                    return Detached;
-                }
-            }
-            catch (IOException)
-            {
-                return Detached;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return Detached;
-            }
-            finally
-            {
-                if (!createdNew)
-                {
-                    if (dataBufferFile != null)
-                    {
-                        dataBufferFile.Dispose();
-                    }
-
-                    if (bufferReadyEvent != null)
-                    {
-                        bufferReadyEvent.Dispose();
-                    }
-
-                    if (dataReadyEvent != null)
-                    {
-                        dataReadyEvent.Dispose();
-                    }
-                }
-            }
-
-            var buffer = new DebugView(dataBufferFile, bufferReadyEvent, dataReadyEvent);
-            return buffer;
+            return view;
         }
-        
+
         /// <summary>
         /// Removes a <see cref="DebugString"/> from this <see cref="DebugView"/>.
         /// </summary>
@@ -326,7 +216,7 @@
         [SecuritySafeCritical]
         public bool TryTake(out DebugString value, int timeout, CancellationToken cancellationToken)
         {
-            if (!this.attached)
+            if (this.context == null)
             {
                 this.Wait(timeout, cancellationToken);
 
@@ -347,7 +237,7 @@
             }
             finally
             {
-                this.bufferReadyEvent.Set();
+                this.context.BufferReadyEventHandle.Set();
             }
         }
 
@@ -380,7 +270,7 @@
         {
             var tcs = new TaskCompletionSource<DebugString>();
 
-            if (!this.attached)
+            if (this.context == null)
             {
                 cancellationToken.Register(
                     state => ((TaskCompletionSource<DebugString>)state).SetCanceled(), tcs);
@@ -389,7 +279,7 @@
             }
 
             RegisteredWaitHandle rwh = ThreadPool.RegisterWaitForSingleObject(
-                this.dataReadyEvent,
+                this.context.DataReadyEventHandle,
                 (state, timedOut) =>
                 {
                     Debug.Assert(!timedOut, "timedOut is true");
@@ -410,7 +300,7 @@
 
             CancellationTokenRegistration ctr = cancellationToken.Register(() =>
             {
-                rwh.Unregister(this.dataReadyEvent);
+                rwh.Unregister(this.context.DataReadyEventHandle);
                 tcs.TrySetCanceled();
             });
 
@@ -420,8 +310,8 @@
             }
             finally
             {
-                rwh.Unregister(this.dataReadyEvent);
-                this.bufferReadyEvent.Set();
+                rwh.Unregister(this.context.DataReadyEventHandle);
+                this.context.BufferReadyEventHandle.Set();
 
                 ctr.Dispose();
             }
@@ -433,33 +323,15 @@
         /// </summary>
         public void Dispose()
         {
-            IDisposable d;
-            
-            d = this.dataBufferFile;
+            IDisposable d = this.context;
 
             if (d != null)
             {
-                this.dataBufferFile = null;
+                this.context = null;
                 d.Dispose();
             }
 
-            d = this.bufferReadyEvent;
-
-            if (d != null)
-            {
-                this.bufferReadyEvent = null;
-                d.Dispose();
-            }
-
-            d = this.dataReadyEvent;
-
-            if (d != null)
-            {
-                this.dataReadyEvent = null;
-                d.Dispose();
-            }
-
-            this.dataBuffer = null;
+            this.buffer = null;
         }
 
         /// <summary>
@@ -485,7 +357,7 @@
                 int waitResult = WaitHandle.WaitAny(
                     new[]
                     {
-                        this.dataReadyEvent,
+                        this.context.DataReadyEventHandle,
                         cancellationToken.WaitHandle
                     },
                     timeout);
@@ -498,7 +370,7 @@
                 return waitResult == 0;
             }
 
-            return this.dataReadyEvent.WaitOne(timeout);
+            return this.context.DataReadyEventHandle.WaitOne(timeout);
         }
 
         /// <summary>
@@ -531,25 +403,230 @@
         /// </returns>
         private DebugString ReadDebugString()
         {
-            using (var viewStream = this.dataBufferFile.CreateViewStream())
+            using (var viewStream = this.context.Buffer.CreateViewStream())
             {
-                int bytesRead = viewStream.Read(this.dataBuffer, 0, this.dataBuffer.Length);
-                Debug.Assert(bytesRead == DataBufferLength, "bytesRead is not 4096");
+                int bytesRead = viewStream.Read(this.buffer, 0, this.buffer.Length);
+
+                if (bytesRead < sizeof(int))
+                {
+                    throw new FormatException("The format of the debug data is invalid");
+                }
 
                 // CORRECTNESS Skip the first 4 bytes in the buffer that indicate the process ID when searching for the null terminator.
-                int terminator = Array.IndexOf(this.dataBuffer, (byte)0, sizeof(int));
+                int terminator = Array.IndexOf(this.buffer, (byte)0, sizeof(int), bytesRead - sizeof(int));
                 Debug.Assert((terminator < 0) || (terminator >= sizeof(int)), "terminator is between 0 and 3");
 
                 if (terminator < 0)
                 {
-                    // ROBUSTNESS Null terminator not found, assume it is placed after the last byte in the buffer.
-                    terminator = DataBufferLength;
+                    // ROBUSTNESS Null terminator not found, assume it is placed after the last byte read into the buffer.
+                    terminator = bytesRead;
                 }
 
-                int processId = BitConverter.ToInt32(this.dataBuffer, 0);
-                string value = Encoding.Default.GetString(this.dataBuffer, sizeof(int), terminator - sizeof(int));
+                int processId = BitConverter.ToInt32(this.buffer, 0);
+                string value = Encoding.Default.GetString(this.buffer, sizeof(int), terminator - sizeof(int));
 
                 return new DebugString(processId, value);
+            }
+        }
+
+        /// <summary>
+        /// Provides intrinsic kernel objects for inter-process communication.
+        /// </summary>
+        private sealed class DebugViewContext : IDisposable
+        {
+            /// <summary>
+            /// The length of the memory-mapped file to which the data is written to.
+            /// </summary>
+            public const int BufferLength = 4096;
+
+            /// <summary>
+            /// The memory-mapped file to which the data is written to.
+            /// </summary>
+            private MemoryMappedFile buffer;
+
+            /// <summary>
+            /// The event wait handle that this <see cref="DebugView"/> sets to signaled when
+            /// the memory-mapped file is ready to receive data.
+            /// </summary>
+            private EventWaitHandle bufferReadyEventHandle;
+
+            /// <summary>
+            /// The wait handle that becomes signaled when data has been written to the memory-mapped
+            /// file.
+            /// </summary>
+            private WaitHandle dataReadyEventHandle;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="DebugViewContext"/> class.
+            /// </summary>
+            /// <param name="buffer">
+            /// The memory-mapped file to which the data is written to.
+            /// </param>
+            /// <param name="bufferReadyEventHandle">
+            /// The event wait handle that this <see cref="DebugView"/> sets to signaled when
+            /// the memory-mapped file is ready to receive data.
+            /// </param>
+            /// <param name="dataReadyEventHandle">
+            /// The wait handle that becomes signaled when data has been written to the memory-mapped
+            /// file.
+            /// </param>
+            public DebugViewContext(
+                MemoryMappedFile buffer,
+                EventWaitHandle bufferReadyEventHandle,
+                WaitHandle dataReadyEventHandle)
+            {
+                Debug.Assert(buffer != null, "file is null");
+                Debug.Assert(bufferReadyEventHandle != null, "bufferReadyEventHandle is null");
+                Debug.Assert(dataReadyEventHandle != null, "dataReadyEventHandle is null");
+
+                this.buffer = buffer;
+                this.bufferReadyEventHandle = bufferReadyEventHandle;
+                this.dataReadyEventHandle = dataReadyEventHandle;
+            }
+
+            /// <summary>
+            /// Gets the memory-mapped file to which the data is written to.
+            /// </summary>
+            public MemoryMappedFile Buffer
+            {
+                get { return this.buffer; }
+            }
+
+            /// <summary>
+            /// Gets the event wait handle that this <see cref="DebugView"/> sets to signaled
+            /// when the memory-mapped file is ready to receive data.
+            /// </summary>
+            public EventWaitHandle BufferReadyEventHandle
+            {
+                get { return this.bufferReadyEventHandle; }
+            }
+
+            /// <summary>
+            /// Gets the wait handle that becomes signaled when data has been written
+            /// to the memory-mapped file.
+            /// </summary>
+            public WaitHandle DataReadyEventHandle
+            {
+                get { return this.dataReadyEventHandle; }
+            }
+
+            /// <summary>
+            /// Attempts to acquire intrinsic kernel objects for inter-process communication.
+            /// </summary>
+            /// <param name="context">
+            /// When <see cref="TryAcquireContext"/> returns, contains the acquired
+            /// <see cref="DebugViewContext"/>, is succeeded; otherwise, a <c>null</c> reference
+            /// (<c>Nothing</c> in Visual Basic).
+            /// </param>
+            /// <returns>
+            /// <c>true</c> if the objects have been successfully acquired; otherwise, <c>false</c>.
+            /// </returns>
+            public static bool TryAcquireContext(out DebugViewContext context)
+            {
+                const string MemoryMappedFileName = @"DBWIN_BUFFER";
+                const string ReadyEventName = @"DBWIN_BUFFER_READY";
+                const string DataReadyEventName = @"DBWIN_DATA_READY";
+
+                context = null;
+
+                MemoryMappedFile buffer = null;
+                EventWaitHandle bufferReadyEventHandle = null;
+                WaitHandle dataReadyEventHandle = null;
+                bool createdNew = false;
+
+                try
+                {
+                    buffer = MemoryMappedFile.CreateNew(
+                        MemoryMappedFileName,
+                        BufferLength,
+                        MemoryMappedFileAccess.ReadWrite);
+
+                    dataReadyEventHandle = new EventWaitHandle(
+                        false,
+                        EventResetMode.AutoReset,
+                        DataReadyEventName,
+                        out createdNew);
+
+                    if (!createdNew)
+                    {
+                        return false;
+                    }
+
+                    bufferReadyEventHandle = new EventWaitHandle(
+                        true,
+                        EventResetMode.AutoReset,
+                        ReadyEventName,
+                        out createdNew);
+
+                    if (!createdNew)
+                    {
+                        return false;
+                    }
+                }
+                catch (IOException)
+                {
+                    return false;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return false;
+                }
+                finally
+                {
+                    if (!createdNew)
+                    {
+                        if (bufferReadyEventHandle != null)
+                        {
+                            bufferReadyEventHandle.Dispose();
+                        }
+
+                        if (dataReadyEventHandle != null)
+                        {
+                            dataReadyEventHandle.Dispose();
+                        }
+
+                        if (buffer != null)
+                        {
+                            buffer.Dispose();
+                        }
+                    }
+                }
+
+                context = new DebugViewContext(buffer, bufferReadyEventHandle, dataReadyEventHandle);
+                return true;
+            }
+
+            /// <summary>
+            /// Performs application-defined tasks associated with freeing, releasing, or resetting
+            /// unmanaged resources.
+            /// </summary>
+            public void Dispose()
+            {
+                IDisposable d;
+
+                d = this.bufferReadyEventHandle;
+
+                if (d != null)
+                {
+                    this.bufferReadyEventHandle = null;
+                    d.Dispose();
+                }
+
+                d = this.dataReadyEventHandle;
+
+                if (d != null)
+                {
+                    this.dataReadyEventHandle = null;
+                    d.Dispose();
+                }
+
+                d = this.buffer;
+
+                if (d != null)
+                {
+                    this.buffer = null;
+                    d.Dispose();
+                }
             }
         }
     }
