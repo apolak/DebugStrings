@@ -403,13 +403,13 @@
         /// </returns>
         private DebugString ReadDebugString()
         {
-            using (var viewStream = this.context.Buffer.CreateViewStream())
+            using (var viewStream = this.context.BufferFile.CreateViewStream())
             {
                 int bytesRead = viewStream.Read(this.buffer, 0, this.buffer.Length);
 
                 if (bytesRead < sizeof(int))
                 {
-                    throw new FormatException("The format of the debug data is invalid");
+                    throw new FormatException("The format of the debug data is invalid.");
                 }
 
                 // CORRECTNESS Skip the first 4 bytes in the buffer that indicate the process ID when searching for the null terminator.
@@ -442,7 +442,7 @@
             /// <summary>
             /// The memory-mapped file to which the data is written to.
             /// </summary>
-            private MemoryMappedFile buffer;
+            private MemoryMappedFile bufferFile;
 
             /// <summary>
             /// The event wait handle that this <see cref="DebugView"/> sets to signaled when
@@ -459,7 +459,7 @@
             /// <summary>
             /// Initializes a new instance of the <see cref="DebugViewContext"/> class.
             /// </summary>
-            /// <param name="buffer">
+            /// <param name="bufferFile">
             /// The memory-mapped file to which the data is written to.
             /// </param>
             /// <param name="bufferReadyEventHandle">
@@ -471,15 +471,15 @@
             /// file.
             /// </param>
             public DebugViewContext(
-                MemoryMappedFile buffer,
+                MemoryMappedFile bufferFile,
                 EventWaitHandle bufferReadyEventHandle,
                 WaitHandle dataReadyEventHandle)
             {
-                Debug.Assert(buffer != null, "file is null");
+                Debug.Assert(bufferFile != null, "bufferFile is null");
                 Debug.Assert(bufferReadyEventHandle != null, "bufferReadyEventHandle is null");
                 Debug.Assert(dataReadyEventHandle != null, "dataReadyEventHandle is null");
 
-                this.buffer = buffer;
+                this.bufferFile = bufferFile;
                 this.bufferReadyEventHandle = bufferReadyEventHandle;
                 this.dataReadyEventHandle = dataReadyEventHandle;
             }
@@ -487,9 +487,9 @@
             /// <summary>
             /// Gets the memory-mapped file to which the data is written to.
             /// </summary>
-            public MemoryMappedFile Buffer
+            public MemoryMappedFile BufferFile
             {
-                get { return this.buffer; }
+                get { return this.bufferFile; }
             }
 
             /// <summary>
@@ -523,21 +523,21 @@
             /// </returns>
             public static bool TryAcquireContext(out DebugViewContext context)
             {
-                const string MemoryMappedFileName = @"DBWIN_BUFFER";
+                const string BufferFileName = @"DBWIN_BUFFER";
                 const string ReadyEventName = @"DBWIN_BUFFER_READY";
                 const string DataReadyEventName = @"DBWIN_DATA_READY";
 
                 context = null;
 
-                MemoryMappedFile buffer = null;
+                MemoryMappedFile bufferFile = null;
                 EventWaitHandle bufferReadyEventHandle = null;
                 WaitHandle dataReadyEventHandle = null;
                 bool createdNew = false;
 
                 try
                 {
-                    buffer = MemoryMappedFile.CreateNew(
-                        MemoryMappedFileName,
+                    bufferFile = MemoryMappedFile.CreateNew(
+                        BufferFileName,
                         BufferLength,
                         MemoryMappedFileAccess.ReadWrite);
 
@@ -585,14 +585,14 @@
                             dataReadyEventHandle.Dispose();
                         }
 
-                        if (buffer != null)
+                        if (bufferFile != null)
                         {
-                            buffer.Dispose();
+                            bufferFile.Dispose();
                         }
                     }
                 }
 
-                context = new DebugViewContext(buffer, bufferReadyEventHandle, dataReadyEventHandle);
+                context = new DebugViewContext(bufferFile, bufferReadyEventHandle, dataReadyEventHandle);
                 return true;
             }
 
@@ -620,11 +620,11 @@
                     d.Dispose();
                 }
 
-                d = this.buffer;
+                d = this.bufferFile;
 
                 if (d != null)
                 {
-                    this.buffer = null;
+                    this.bufferFile = null;
                     d.Dispose();
                 }
             }
