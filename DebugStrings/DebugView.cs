@@ -409,7 +409,7 @@
 
                 if (bytesRead < sizeof(int))
                 {
-                    throw new FormatException("The format of the debug data is invalid.");
+                    throw new InvalidDataException("Data length in bytes must be between 4 and 4096, actual data length is " + bytesRead + ".");
                 }
 
                 // CORRECTNESS Skip the first 4 bytes in the buffer that indicate the process ID when searching for the null terminator.
