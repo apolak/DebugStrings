@@ -524,8 +524,7 @@
         /// <returns>
         /// The <see cref="DebugString"/> read from the underlying memory-mapped file.
         /// </returns>
-        [SecurityCritical]
-        private unsafe DebugString ReadDebugString()
+        private DebugString ReadDebugString()
         {
             using (var viewStream = this.dataBufferFile.CreateViewStream())
             {
