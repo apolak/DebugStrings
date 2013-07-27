@@ -534,18 +534,38 @@
                 WaitHandle dataReadyEventHandle = null;
                 bool createdNew = false;
 
+                var securityDescriptor = new RawSecurityDescriptor(
+                    ControlFlags.SelfRelative | ControlFlags.DiscretionaryAclPresent,
+                    null,
+                    null,
+                    null,
+                    null);
+
+                var securityDescriptorBytes = new byte[securityDescriptor.BinaryLength];
+                securityDescriptor.GetBinaryForm(securityDescriptorBytes, 0);
+
                 try
                 {
+                    var memoryMappedFileSecurity = new MemoryMappedFileSecurity();
+                    memoryMappedFileSecurity.SetSecurityDescriptorBinaryForm(securityDescriptorBytes);
+
                     bufferFile = MemoryMappedFile.CreateNew(
                         BufferFileName,
                         BufferLength,
-                        MemoryMappedFileAccess.ReadWrite);
+                        MemoryMappedFileAccess.ReadWrite,
+                        MemoryMappedFileOptions.None,
+                        memoryMappedFileSecurity,
+                        HandleInheritability.None);
+
+                    var eventSecurity = new EventWaitHandleSecurity();
+                    eventSecurity.SetSecurityDescriptorBinaryForm(securityDescriptorBytes);
 
                     dataReadyEventHandle = new EventWaitHandle(
                         false,
                         EventResetMode.AutoReset,
                         DataReadyEventName,
-                        out createdNew);
+                        out createdNew,
+                        eventSecurity);
 
                     if (!createdNew)
                     {
@@ -556,7 +576,8 @@
                         true,
                         EventResetMode.AutoReset,
                         ReadyEventName,
-                        out createdNew);
+                        out createdNew,
+                        eventSecurity);
 
                     if (!createdNew)
                     {
