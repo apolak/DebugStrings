@@ -456,7 +456,7 @@
                 Debug.Assert(bytesRead == DataBufferLength, "bytesRead is not 4096");
 
                 // CORRECTNESS Skip the first 4 bytes in the buffer that indicate the process ID when searching for the null terminator.
-                int terminator = Array.IndexOf(this.dataBuffer, 0, sizeof(int));
+                int terminator = Array.IndexOf(this.dataBuffer, (byte)0, sizeof(int));
                 Debug.Assert((terminator < 0) || (terminator >= sizeof(int)), "terminator is between 0 and 3");
 
                 if (terminator < 0)
