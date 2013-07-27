@@ -300,7 +300,7 @@
 
             CancellationTokenRegistration ctr = cancellationToken.Register(() =>
             {
-                rwh.Unregister(this.context.DataReadyEventHandle);
+                rwh.Unregister(null);
                 tcs.TrySetCanceled();
             });
 
@@ -310,7 +310,7 @@
             }
             finally
             {
-                rwh.Unregister(this.context.DataReadyEventHandle);
+                rwh.Unregister(null);
                 this.context.BufferReadyEventHandle.Set();
 
                 ctr.Dispose();
