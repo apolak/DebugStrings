@@ -13,13 +13,13 @@
     /// <summary>
     /// Monitors values sent to the debug output.
     /// </summary>
-    public sealed class DebugView : IDisposable
+    public sealed class DebugMonitor : IDisposable
     {
         /// <summary>
-        /// The <see cref="DebugViewContext"/> that provides intrinsic kernel objects
+        /// The <see cref="DebugMonitorContext"/> that provides intrinsic kernel objects
         /// for inter-process communication.
         /// </summary>
-        private DebugViewContext context;
+        private DebugMonitorContext context;
         
         /// <summary>
         /// The memory buffer to which the data is read from the memory-mapped file.
@@ -27,19 +27,19 @@
         private byte[] buffer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DebugView"/> class.
+        /// Initializes a new instance of the <see cref="DebugMonitor"/> class.
         /// </summary>
         /// <param name="context">
-        /// The <see cref="DebugViewContext"/> that provides intrinsic kernel objects
+        /// The <see cref="DebugMonitorContext"/> that provides intrinsic kernel objects
         /// for inter-process communication.
         /// </param>
-        private DebugView(DebugViewContext context)
+        private DebugMonitor(DebugMonitorContext context)
         {
             this.context = context;
             
             if (context != null)
             {
-                this.buffer = new byte[DebugViewContext.BufferLength];
+                this.buffer = new byte[DebugMonitorContext.BufferLength];
             }
         }
 
@@ -53,26 +53,26 @@
         }
 
         /// <summary>
-        /// Creates a new <see cref="DebugView"/>.
+        /// Creates a new <see cref="DebugMonitor"/>.
         /// </summary>
         /// <returns>
-        /// The newly created <see cref="DebugView"/>.
+        /// The newly created <see cref="DebugMonitor"/>.
         /// </returns>
-        public static DebugView CreateView()
+        public static DebugMonitor CreateNew()
         {
-            DebugViewContext context;
+            DebugMonitorContext context;
 
-            DebugViewContext.TryAcquireContext(out context);
-            var view = new DebugView(context);
+            DebugMonitorContext.TryAcquireContext(out context);
+            var monitor = new DebugMonitor(context);
 
-            return view;
+            return monitor;
         }
 
         /// <summary>
-        /// Removes a <see cref="DebugString"/> from this <see cref="DebugView"/>.
+        /// Removes a <see cref="DebugString"/> from this <see cref="DebugMonitor"/>.
         /// </summary>
         /// <returns>
-        /// The <see cref="DebugString"/> removed from this <see cref="DebugView"/>.
+        /// The <see cref="DebugString"/> removed from this <see cref="DebugMonitor"/>.
         /// </returns>
         [SecuritySafeCritical]
         public DebugString Take()
@@ -82,13 +82,13 @@
 
         /// <summary>
         /// Removes a <see cref="DebugString"/> from the buffer contained by this
-        /// <see cref="DebugView"/>.
+        /// <see cref="DebugMonitor"/>.
         /// </summary>
         /// <param name="cancellationToken">
         /// The <see cref="CancellationToken"/> that can be used to cancel the take operation.
         /// </param>
         /// <returns>
-        /// The <see cref="DebugString"/> removed from this <see cref="DebugView"/>.
+        /// The <see cref="DebugString"/> removed from this <see cref="DebugMonitor"/>.
         /// </returns>
         [SecuritySafeCritical]
         public DebugString Take(CancellationToken cancellationToken)
@@ -102,7 +102,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/>.
+        /// <see cref="DebugMonitor"/>.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString)"/> returns, contains the removed <see cref="DebugString"/>,
@@ -119,7 +119,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> within the specified time.
+        /// <see cref="DebugMonitor"/> within the specified time.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString,int)"/> returns, contains the removed
@@ -141,7 +141,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> within the specified time.
+        /// <see cref="DebugMonitor"/> within the specified time.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString,TimeSpan)"/> returns, contains the removed
@@ -163,7 +163,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> within the specified time while monitoring cancellation requests.
+        /// <see cref="DebugMonitor"/> within the specified time while monitoring cancellation requests.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString,TimeSpan,CancellationToken)"/> returns, contains
@@ -196,7 +196,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> within the specified time while monitoring cancellation requests.
+        /// <see cref="DebugMonitor"/> within the specified time while monitoring cancellation requests.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString,int,CancellationToken)"/> returns, contains the removed
@@ -243,7 +243,7 @@
 
         /// <summary>
         /// Asynchronously removes a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/>.
+        /// <see cref="DebugMonitor"/>.
         /// </summary>
         /// <returns>
         /// The task that represents the asynchronous removal operation. The <see cref="Task{T}.Result"/>
@@ -257,7 +257,7 @@
 
         /// <summary>
         /// Asynchronously removes a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> while monitoring cancellation requests.
+        /// <see cref="DebugMonitor"/> while monitoring cancellation requests.
         /// </summary>
         /// <param name="cancellationToken">
         /// The token to monitor for cancellation requests.
@@ -432,7 +432,7 @@
         /// <summary>
         /// Provides intrinsic kernel objects for inter-process communication.
         /// </summary>
-        private sealed class DebugViewContext : IDisposable
+        private sealed class DebugMonitorContext : IDisposable
         {
             /// <summary>
             /// The length of the memory-mapped file to which the data is written to.
@@ -445,7 +445,7 @@
             private MemoryMappedFile bufferFile;
 
             /// <summary>
-            /// The event wait handle that this <see cref="DebugView"/> sets to signaled when
+            /// The event wait handle that this <see cref="DebugMonitor"/> sets to signaled when
             /// the memory-mapped file is ready to receive data.
             /// </summary>
             private EventWaitHandle bufferReadyEventHandle;
@@ -457,20 +457,20 @@
             private WaitHandle dataReadyEventHandle;
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="DebugViewContext"/> class.
+            /// Initializes a new instance of the <see cref="DebugMonitorContext"/> class.
             /// </summary>
             /// <param name="bufferFile">
             /// The memory-mapped file to which the data is written to.
             /// </param>
             /// <param name="bufferReadyEventHandle">
-            /// The event wait handle that this <see cref="DebugView"/> sets to signaled when
+            /// The event wait handle that this <see cref="DebugMonitor"/> sets to signaled when
             /// the memory-mapped file is ready to receive data.
             /// </param>
             /// <param name="dataReadyEventHandle">
             /// The wait handle that becomes signaled when data has been written to the memory-mapped
             /// file.
             /// </param>
-            public DebugViewContext(
+            public DebugMonitorContext(
                 MemoryMappedFile bufferFile,
                 EventWaitHandle bufferReadyEventHandle,
                 WaitHandle dataReadyEventHandle)
@@ -493,7 +493,7 @@
             }
 
             /// <summary>
-            /// Gets the event wait handle that this <see cref="DebugView"/> sets to signaled
+            /// Gets the event wait handle that this <see cref="DebugMonitor"/> sets to signaled
             /// when the memory-mapped file is ready to receive data.
             /// </summary>
             public EventWaitHandle BufferReadyEventHandle
@@ -515,13 +515,13 @@
             /// </summary>
             /// <param name="context">
             /// When <see cref="TryAcquireContext"/> returns, contains the acquired
-            /// <see cref="DebugViewContext"/>, is succeeded; otherwise, a <c>null</c> reference
+            /// <see cref="DebugMonitorContext"/>, is succeeded; otherwise, a <c>null</c> reference
             /// (<c>Nothing</c> in Visual Basic).
             /// </param>
             /// <returns>
             /// <c>true</c> if the objects have been successfully acquired; otherwise, <c>false</c>.
             /// </returns>
-            public static bool TryAcquireContext(out DebugViewContext context)
+            public static bool TryAcquireContext(out DebugMonitorContext context)
             {
                 const string BufferFileName = @"DBWIN_BUFFER";
                 const string ReadyEventName = @"DBWIN_BUFFER_READY";
@@ -613,7 +613,7 @@
                     }
                 }
 
-                context = new DebugViewContext(bufferFile, bufferReadyEventHandle, dataReadyEventHandle);
+                context = new DebugMonitorContext(bufferFile, bufferReadyEventHandle, dataReadyEventHandle);
                 return true;
             }
 

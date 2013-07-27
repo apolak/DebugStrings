@@ -32,7 +32,7 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DebugView.cs" />
+    <Compile Include="DebugMonitor.cs" />
     <Compile Include="DebugString.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
