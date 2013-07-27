@@ -7,8 +7,8 @@
     using System.Security;
 
     /// <summary>
-    /// Defines the unique identifier of the process that has written data to the debug output
-    /// and the text representation of the object that has been written.
+    /// Defines the unique identifier of the process that has sent data to the debug output
+    /// and the text representation of the object that has been sent.
     /// </summary>
     [Serializable]
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
@@ -21,12 +21,12 @@
         public static readonly bool IsPlatformSupported = CheckIsPlatformSupported();
 
         /// <summary>
-        /// The unique identifier of the process that has written data to the debug output.
+        /// The unique identifier of the process that has sent data to the debug output.
         /// </summary>
         private readonly int processId;
 
         /// <summary>
-        /// The text representation of the object that has been written to the debug output.
+        /// The text representation of the object that has been sent to the debug output.
         /// </summary>
         private readonly string value;
 
@@ -35,10 +35,10 @@
         /// the specified unique identifier of the process and the string value.
         /// </summary>
         /// <param name="processId">
-        /// The unique identifier of the process that has written the data.
+        /// The unique identifier of the process that has sent the data.
         /// </param>
         /// <param name="value">
-        /// The text representation of the written object.
+        /// The text representation of the sent object.
         /// </param>
         public DebugString(int processId, string value)
         {
@@ -47,7 +47,7 @@
         }
 
         /// <summary>
-        /// Gets the unique identifier of the process that has written the data
+        /// Gets the unique identifier of the process that has sent the data
         /// to the debug output.
         /// </summary>
         public int ProcessId
@@ -56,7 +56,7 @@
         }
 
         /// <summary>
-        /// Gets the text representation of the object written to the debug output.
+        /// Gets the text representation of the object sent to the debug output.
         /// </summary>
         public string Value
         {
@@ -123,16 +123,16 @@
         }
 
         /// <summary>
-        /// Writes the specified string value to the debug output.
+        /// Sends the specified string value to the debug output.
         /// </summary>
         /// <param name="value">
-        /// The value to write.
+        /// The value to send.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
         /// </exception>
         [SecurityCritical]
-        public static void Write(string value)
+        public static void Send(string value)
         {
             if (!IsPlatformSupported)
             {
@@ -143,36 +143,36 @@
         }
 
         /// <summary>
-        /// Writes the text representation of the specified object to the debug output.
+        /// Sends the text representation of the specified object to the debug output.
         /// </summary>
         /// <param name="value">
-        /// The value to write.
+        /// The value to send.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
         /// </exception>
         [SecurityCritical]
-        public static void Write<TValue>(TValue value)
+        public static void Send<TValue>(TValue value)
         {
             if (value == null)
             {
-                Write(null);
+                Send(null);
             }
             else
             {
-                Write(value.ToString());
+                Send(value.ToString());
             }
         }
 
         /// <summary>
-        /// Writes the text representation of the specified object to the debug output using the specified
+        /// Sends the text representation of the specified object to the debug output using the specified
         /// format information.
         /// </summary>
         /// <param name="format">
         /// The composite format string.
         /// </param>
         /// <param name="arg0">
-        /// The object to write using <paramref name="format"/>.
+        /// The object to send using <paramref name="format"/>.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
@@ -184,24 +184,24 @@
         /// <paramref name="format"/> is invalid.-or- The index of a format item is not zero.
         /// </exception>
         [SecurityCritical]
-        public static void Write(string format, object arg0)
+        public static void Send(string format, object arg0)
         {
             string value = string.Format(format, arg0);
-            Write(value);
+            Send(value);
         }
 
         /// <summary>
-        /// Writes the text representation of the specified objects to the debug output using the specified
+        /// Sends the text representation of the specified objects to the debug output using the specified
         /// format information.
         /// </summary>
         /// <param name="format">
         /// The composite format string.
         /// </param>
         /// <param name="arg0">
-        /// The first object to write using <paramref name="format"/>.
+        /// The first object to send using <paramref name="format"/>.
         /// </param>
         /// <param name="arg1">
-        /// The second object to write using <paramref name="format"/>.
+        /// The second object to send using <paramref name="format"/>.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
@@ -213,27 +213,27 @@
         /// <paramref name="format"/> is invalid.-or- The index of a format item is not zero or one.
         /// </exception>
         [SecurityCritical]
-        public static void Write(string format, object arg0, object arg1)
+        public static void Send(string format, object arg0, object arg1)
         {
             string value = string.Format(format, arg0, arg1);
-            Write(value);
+            Send(value);
         }
 
         /// <summary>
-        /// Writes the text representation of the specified objects to the debug output using the specified
+        /// Sends the text representation of the specified objects to the debug output using the specified
         /// format information.
         /// </summary>
         /// <param name="format">
         /// The composite format string.
         /// </param>
         /// <param name="arg0">
-        /// The first object to write using <paramref name="format"/>.
+        /// The first object to send using <paramref name="format"/>.
         /// </param>
         /// <param name="arg1">
-        /// The second object to write using <paramref name="format"/>.
+        /// The second object to send using <paramref name="format"/>.
         /// </param>
         /// <param name="arg2">
-        /// The third object to write using <paramref name="format"/>.
+        /// The third object to send using <paramref name="format"/>.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
@@ -246,21 +246,21 @@
         /// or greater than two.
         /// </exception>
         [SecurityCritical]
-        public static void Write(string format, object arg0, object arg1, object arg2)
+        public static void Send(string format, object arg0, object arg1, object arg2)
         {
             string value = string.Format(format, arg0, arg1, arg2);
-            Write(value);
+            Send(value);
         }
 
         /// <summary>
-        /// Writes the text representation of the specified array of objects to the debug output using
+        /// Sends the text representation of the specified array of objects to the debug output using
         /// the specified format information.
         /// </summary>
         /// <param name="format">
         /// The composite format string.
         /// </param>
         /// <param name="arg">
-        /// The array of objects to write using <paramref name="format"/>.
+        /// The array of objects to send using <paramref name="format"/>.
         /// </param>
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
@@ -273,10 +273,10 @@
         /// or greater than or equal to the length of the <paramref name="arg" /> array.
         /// </exception>
         [SecurityCritical]
-        public static void Write(string format, params object[] arg)
+        public static void Send(string format, params object[] arg)
         {
             string value = string.Format(format, arg);
-            Write(value);
+            Send(value);
         }
 
         /// <summary>
@@ -360,10 +360,10 @@
         }
 
         /// <summary>
-        /// Gets the text representation of the object that has been written to the debug output.
+        /// Gets the text representation of the object that has been sent to the debug output.
         /// </summary>
         /// <returns>
-        /// The text representation of the written object.
+        /// The text representation of the sent object.
         /// </returns>
         public override string ToString()
         {

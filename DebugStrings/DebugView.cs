@@ -11,7 +11,7 @@
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Monitors values written to the debug output.
+    /// Monitors values sent to the debug output.
     /// </summary>
     public sealed class DebugView : IDisposable
     {
