@@ -7,6 +7,7 @@
     using System.Security.AccessControl;
     using System.Text;
     using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Monitors values written to the debug output.
@@ -342,6 +343,82 @@
             finally
             {
                 this.bufferReadyEvent.Set();
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously removes a <see cref="DebugString" /> from the buffer contained by this
+        /// <see cref="DebugView"/>.
+        /// </summary>
+        /// <returns>
+        /// The task that represents the asynchronous removal operation. The <see cref="Task{T}.Result"/>
+        /// contains the <see cref="DebugString"/> removed from the buffer.
+        /// </returns>
+        public async Task<DebugString> TakeAsync()
+        {
+            return await TakeAsync(CancellationToken.None)
+                .ConfigureAwait(continueOnCapturedContext: false);
+        }
+
+        /// <summary>
+        /// Asynchronously removes a <see cref="DebugString" /> from the buffer contained by this
+        /// <see cref="DebugView"/> while monitoring cancellation requests.
+        /// </summary>
+        /// <param name="cancellationToken">
+        /// The token to monitor for cancellation requests.
+        /// </param>
+        /// <returns>
+        /// The task that represents the asynchronous removal operation. The <see cref="Task{T}.Result"/>
+        /// contains the <see cref="DebugString"/> removed from the buffer.
+        /// </returns>
+        public async Task<DebugString> TakeAsync(CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<DebugString>();
+
+            if (!this.attached)
+            {
+                cancellationToken.Register(
+                    state => ((TaskCompletionSource<DebugString>)state).SetCanceled(), tcs);
+
+                return await tcs.Task.ConfigureAwait(continueOnCapturedContext: false);
+            }
+
+            RegisteredWaitHandle rwh = ThreadPool.RegisterWaitForSingleObject(
+                this.dataReadyEvent,
+                (state, timedOut) =>
+                {
+                    Debug.Assert(!timedOut, "timedOut is true");
+
+                    try
+                    {
+                        DebugString value = this.ReadDebugString();
+                        ((TaskCompletionSource<DebugString>)state).SetResult(value);
+                    }
+                    catch (Exception ex)
+                    {
+                        ((TaskCompletionSource<DebugString>)state).SetException(ex);
+                    }
+                },
+                tcs,
+                Timeout.Infinite,
+                executeOnlyOnce: true);
+
+            CancellationTokenRegistration ctr = cancellationToken.Register(() =>
+            {
+                rwh.Unregister(this.dataReadyEvent);
+                tcs.TrySetCanceled();
+            });
+
+            try
+            {
+                return await tcs.Task.ConfigureAwait(continueOnCapturedContext: false);
+            }
+            finally
+            {
+                rwh.Unregister(this.dataReadyEvent);
+                this.bufferReadyEvent.Set();
+
+                ctr.Dispose();
             }
         }
 
