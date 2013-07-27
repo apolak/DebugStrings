@@ -2,6 +2,7 @@
 {
     using System;
     using System.Diagnostics;
+    using System.IO;
     using System.IO.MemoryMappedFiles;
     using System.Security;
     using System.Security.AccessControl;
@@ -143,6 +144,10 @@
                 {
                     return Detached;
                 }
+            }
+            catch (IOException)
+            {
+                return Detached;
             }
             catch (UnauthorizedAccessException)
             {
