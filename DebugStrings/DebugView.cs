@@ -267,7 +267,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> within the specified time while observing a cancellation token.
+        /// <see cref="DebugView"/> within the specified time while monitoring cancellation requests.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString,TimeSpan,CancellationToken)"/> returns, contains
@@ -279,7 +279,7 @@
         /// or the <see cref="TimeSpan"/> that represents -1 milliseconds to wait indefinitely.
         /// </param>
         /// <param name="cancellationToken">
-        /// The cancellation token to observe.
+        /// The token to monitor for cancellation requests.
         /// </param>
         /// <returns>
         /// <c>true</c> if the <see cref="DebugString"/> has been removed within the specified time;
@@ -300,7 +300,7 @@
 
         /// <summary>
         /// Attempts to remove a <see cref="DebugString" /> from the buffer contained by this
-        /// <see cref="DebugView"/> within the specified time while observing a cancellation token.
+        /// <see cref="DebugView"/> within the specified time while monitoring cancellation requests.
         /// </summary>
         /// <param name="value">
         /// When <see cref="TryTake(DebugString,int,CancellationToken)"/> returns, contains the removed
@@ -311,7 +311,7 @@
         /// indefinitely.
         /// </param>
         /// <param name="cancellationToken">
-        /// The cancellation token to observe.
+        /// The token to monitor for cancellation requests.
         /// </param>
         /// <returns>
         /// <c>true</c> if the <see cref="DebugString"/> has been removed within the specified time;
@@ -381,15 +381,15 @@
         }
 
         /// <summary>
-        /// Attempts to wait until data is ready within the specified time while observing
-        /// the cancellation token.
+        /// Attempts to wait until data is ready within the specified time while monitoring cancellation
+        /// requests.
         /// </summary>
         /// <param name="timeout">
         /// The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1) to wait
         /// indefinitely.
         /// </param>
         /// <param name="cancellationToken">
-        /// The cancellation token to observe.
+        /// The token to monitor for cancellation requests.
         /// </param>
         /// <returns>
         /// <c>true</c> if data is ready; otherwise, <c>false</c>.
@@ -420,14 +420,14 @@
         }
 
         /// <summary>
-        /// Waits within the specified time while observing the cancellation token.
+        /// Waits within the specified time while monitoring cancellation requests.
         /// </summary>
         /// <param name="timeout">
         /// The number of milliseconds to wait, or <see cref="Timeout.Infinite"/> (-1) to wait
         /// indefinitely.
         /// </param>
         /// <param name="cancellationToken">
-        /// The cancellation token to observe.
+        /// The token to monitor for cancellation requests.
         /// </param>
         private void Wait(int timeout, CancellationToken cancellationToken)
         {
