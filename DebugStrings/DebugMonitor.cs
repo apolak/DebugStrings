@@ -11,6 +11,22 @@
     using System.Threading.Tasks;
 
     /// <summary>
+    /// Name prefix to use when creating named system objects.
+    /// </summary>
+    public enum NamePrefix
+    {
+        /// <summary>
+        /// The <c>Local\</c> prefix.
+        /// </summary>
+        Local = 0,
+
+        /// <summary>
+        /// The <c>Global\</c> prefix.
+        /// </summary>
+        Global
+    }
+
+    /// <summary>
     /// Monitors values sent to the debug output.
     /// </summary>
     public sealed class DebugMonitor : IDisposable
