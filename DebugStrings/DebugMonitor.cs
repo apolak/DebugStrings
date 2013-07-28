@@ -442,7 +442,8 @@
         {
             var tcs = new TaskCompletionSource<DebugString>();
 
-            await this.buffer.WaitForDataAsync(cancellationToken);
+            await this.buffer.WaitForDataAsync(cancellationToken)
+                .ConfigureAwait(continueOnCapturedContext: false);
 
             int bytesRead;
 
