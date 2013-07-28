@@ -3,8 +3,10 @@
     using System;
     using System.ComponentModel;
     using System.Diagnostics;
+    using System.IO;
     using System.Runtime.InteropServices;
     using System.Security;
+    using System.Text;
 
     /// <summary>
     /// Defines the unique identifier of the process that has sent data to the debug output
@@ -120,6 +122,46 @@
         public static bool operator !=(DebugString left, DebugString right)
         {
             return !left.Equals(right);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="DebugString"/> converted from the specified range of bytes within
+        /// the specified array.
+        /// </summary>
+        /// <param name="array">
+        /// The array of bytes.
+        /// </param>
+        /// <param name="offset">
+        /// The starting position within <paramref name="array"/>.
+        /// </param>
+        /// <param name="count">
+        /// The number of bytes within <paramref name="array"/> to convert.
+        /// </param>
+        /// <returns>
+        /// The <see cref="DebugString"/> formed by <paramref name="count"/> bytes beginning
+        /// at <paramref name="offset"/> within <paramref name="array"/>.
+        /// </returns>
+        public static DebugString ToDebugString(byte[] array, int offset, int count)
+        {
+            if (count < sizeof(int))
+            {
+                throw new InvalidDataException("Data length in bytes must greater than or equal to 4, actual data length is " + count + ".");
+            }
+
+            // CORRECTNESS Skip the first 4 bytes in the specified range that indicate the process ID when searching for the null terminator.
+            int terminator = Array.IndexOf(array, (byte)0, offset + sizeof(int), count - sizeof(int));
+            Debug.Assert((terminator < 0) || (terminator >= sizeof(int)), "terminator is between 0 and 3");
+
+            if (terminator < 0)
+            {
+                // ROBUSTNESS Null terminator not found, assume it is placed after the last byte in the specified range.
+                terminator = offset + count;
+            }
+
+            int processId = BitConverter.ToInt32(array, 0);
+            string value = Encoding.Default.GetString(array, offset + sizeof(int), terminator - offset - sizeof(int));
+
+            return new DebugString(processId, value);
         }
 
         /// <summary>
