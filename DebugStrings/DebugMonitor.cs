@@ -250,7 +250,6 @@
         /// <returns>
         /// The <see cref="DebugString"/> removed from this <see cref="DebugMonitor"/>.
         /// </returns>
-        [SecuritySafeCritical]
         public DebugString Take()
         {
             return this.Take(CancellationToken.None);
@@ -266,7 +265,6 @@
         /// <returns>
         /// The <see cref="DebugString"/> removed from this <see cref="DebugMonitor"/>.
         /// </returns>
-        [SecuritySafeCritical]
         public DebugString Take(CancellationToken cancellationToken)
         {
             DebugString value;
@@ -287,7 +285,6 @@
         /// <returns>
         /// <c>true</c> if the <see cref="DebugString"/> has been removed; otherwise, <c>false</c>.
         /// </returns>
-        [SecuritySafeCritical]
         public bool TryTake(out DebugString value)
         {
             return this.TryTake(out value, 0, CancellationToken.None);
@@ -309,7 +306,6 @@
         /// <c>true</c> if the <see cref="DebugString"/> has been removed within the specified time;
         /// otherwise, <c>false</c>.
         /// </returns>
-        [SecuritySafeCritical]
         public bool TryTake(out DebugString value, int timeout)
         {
             return this.TryTake(out value, timeout, CancellationToken.None);
@@ -331,7 +327,6 @@
         /// <c>true</c> if the <see cref="DebugString"/> has been removed within the specified time;
         /// otherwise, <c>false</c>.
         /// </returns>
-        [SecuritySafeCritical]
         public bool TryTake(out DebugString value, TimeSpan timeout)
         {
             return this.TryTake(out value, timeout, CancellationToken.None);
@@ -357,7 +352,6 @@
         /// <c>true</c> if the <see cref="DebugString"/> has been removed within the specified time;
         /// otherwise, <c>false</c>.
         /// </returns>
-        [SecuritySafeCritical]
         public bool TryTake(out DebugString value, TimeSpan timeout, CancellationToken cancellationToken)
         {
             long timeoutMilliseconds = (long)timeout.TotalMilliseconds;
@@ -389,7 +383,6 @@
         /// <c>true</c> if the <see cref="DebugString"/> has been removed within the specified time;
         /// otherwise, <c>false</c>.
         /// </returns>
-        [SecuritySafeCritical]
         public bool TryTake(out DebugString value, int timeout, CancellationToken cancellationToken)
         {
             if (!this.buffer.TryWaitForData(timeout, cancellationToken))

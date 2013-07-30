@@ -193,7 +193,6 @@
         /// <exception cref="PlatformNotSupportedException">
         /// This operation is not supported on the current platform.
         /// </exception>
-        [SecurityCritical]
         public static void Send<TValue>(TValue value)
         {
             if (value == null)
@@ -225,7 +224,6 @@
         /// <exception cref="FormatException">
         /// <paramref name="format"/> is invalid.-or- The index of a format item is not zero.
         /// </exception>
-        [SecurityCritical]
         public static void Send(string format, object arg0)
         {
             string value = string.Format(format, arg0);
@@ -254,7 +252,6 @@
         /// <exception cref="FormatException">
         /// <paramref name="format"/> is invalid.-or- The index of a format item is not zero or one.
         /// </exception>
-        [SecurityCritical]
         public static void Send(string format, object arg0, object arg1)
         {
             string value = string.Format(format, arg0, arg1);
@@ -287,7 +284,6 @@
         /// <paramref name="format"/> is invalid.-or- The index of a format item is less than zero,
         /// or greater than two.
         /// </exception>
-        [SecurityCritical]
         public static void Send(string format, object arg0, object arg1, object arg2)
         {
             string value = string.Format(format, arg0, arg1, arg2);
@@ -314,7 +310,6 @@
         /// <paramref name="format"/> is invalid.-or- The index of a format item is less than zero,
         /// or greater than or equal to the length of the <paramref name="arg" /> array.
         /// </exception>
-        [SecurityCritical]
         public static void Send(string format, params object[] arg)
         {
             string value = string.Format(format, arg);
